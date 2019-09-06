@@ -29,19 +29,6 @@ def main():
     file = lw(filename)
     page = file.active
     end = page.max_row + 1
-
-    # print(find_score(['Физика', 'Информатика'], page, end))
-    # list1 = [variant[0]]
-    # for i in range(len(variant)):
-    #     temp_list1
-    #     for j in range(i+1, len(variant)):
-    #         subjects = [variant[i], variant[j]]
-    #         print(
-    #             subjects[0],
-    #             subjects[1],
-    #             find_score(subjects, page, end)
-    #         )
-
     outcome = []
     scores = []
 
@@ -80,7 +67,3 @@ def find_score(subjects, page, end):
 
 if __name__ == '__main__':
     main()
-    # print(create_list2(['Физика']))
-    # for i in range(0, len(variant)+1):
-    #     for subset in itertools.combinations(variant, i):
-    #         print(list(subset))

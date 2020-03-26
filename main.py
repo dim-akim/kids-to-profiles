@@ -39,7 +39,13 @@ def main():
             score = find_score(list1, page, end) + find_score(list2, page, end)
             scores.append(score)
             if score < 16:
-                outcome.append([list1, list2, score])
+                list1.sort()
+                list2.sort()
+                for entry in outcome:
+                    if list2 == entry[0]:
+                        break
+                else:
+                    outcome.append([list1, list2, score])
 
     for entry in outcome:
         print(entry)

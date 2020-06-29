@@ -1,58 +1,105 @@
 from openpyxl import load_workbook as lw
 import itertools
-
-
-filename = 'kids_and_profiles.xlsx'
-columns = {
-    'Физика': 2,
-    'Химия': 3,
-    'Биология': 4,
-    'Обществознание': 5,
-    'Литература': 6,
-    'География': 7,
-    'Информатика': 8,
-    'Английский': 9
-}
-variant = [
-    'Физика',
-    'Химия',
-    'Биология',
-    'Обществознание',
-    'Литература',
-    'География',
-    'Информатика',
-    'Английский'
-]
+import os
 
 
 def main():
-    file = lw(filename)
+    global subjects_and_columns
+    filename = get_filename()
+    file = lw(filename, data_only=True)  # data_only - флаг для того, чтобы считывались значения формул
     page = file.active
-    end = page.max_row + 1
+
+    # end_row = page.max_row + 1
+    end_row = 27
+    end_column = page.max_column + 1
+
+    subjects_and_columns = get_subjects(page, end_column)
     outcome = []
     scores = []
 
-    for L in range(0, len(variant)):
-        for subset in itertools.combinations(variant, L):
-            list1 = list(subset)
-            list2 = create_list2(list1)
-            score = find_score(list1, page, end) + find_score(list2, page, end)
-            scores.append(score)
-            if score < 16:
-                list1.sort()
-                list2.sort()
-                for entry in outcome:
-                    if list2 == entry[0]:
-                        break
-                else:
-                    outcome.append([list1, list2, score])
+    intersections_limit = 6
 
+    # Делим на 2 группы
+
+    # for L in range(0, len(subjects_and_columns.keys())):
+    #     for subset in itertools.combinations(subjects_and_columns.keys(), L):
+    #         list1 = list(subset)
+    #         list2 = create_list2(list1)
+    #         score = find_score(list1, page, end_row) + find_score(list2, page, end_row)
+    #         scores.append(score)
+    #         if score < intersections_limit:
+    #             list1.sort()
+    #             list2.sort()
+    #             for entry in outcome:
+    #                 if list2 == entry[0]:
+    #                     break
+    #             else:
+    #                 outcome.append([list1, list2, score])
+
+    # Делим на 3 группы
+
+    for L in range(0, len(subjects_and_columns.keys())):
+        for subset in itertools.combinations(subjects_and_columns.keys(), L):
+            list1 = list(subset)
+            list2 = create_list2(subjects_and_columns.keys(), list1)
+            for N in range(0, len(list2)):
+                for subset2 in itertools.combinations(list2, N):
+                    list3 = list(subset2)
+                    list4 = create_list2(list2, list3)
+                    score = (find_score(list1, page, end_row) +
+                             find_score(list3, page, end_row) +
+                             find_score(list4, page, end_row))
+                    scores.append(score)
+                    if score < intersections_limit:
+                        list1.sort()
+                        list3.sort()
+                        list4.sort()
+                        for entry in outcome:
+                            if list3 in entry and list4 in entry:
+                                break
+                        else:
+                            outcome.append([list1, list3, list4, score])
+
+    outcome.sort()
     for entry in outcome:
         print(entry)
 
 
-def create_list2(list1):
-    list2 = [i for i in variant]
+def get_filename():
+    """
+    Показывает файлы в папке data, один из которых можно выбрать для обработки
+    :return: str. Имя файла для дальнейшей работы
+    """
+    folder = 'data'
+    files = os.listdir(folder)
+    print(f'В папке {folder} найдены следующие файлы:')
+    for i in range(len(files)):
+        print(f'{i} - {files[i]}')
+    choice = files[int(input('Введите номер файла, который нужно обработать: '))]
+    return os.path.join(folder, choice)
+
+
+def get_subjects(page, end):
+    """
+    Получает список профильных предметов
+    Первые два столбца на странице - Фамилия и Имя, предмет начинается с 3 столбца
+    :param page: объект страницы openpyxl
+    :param end: последняя колонка, до которой ищутся предметы
+    :return: dict. Ключ - название предмета, значение - номер колонки для этого предмета
+    """
+    subjects = {}
+    for i in range(3, end):  # первый предмет находится в 3 столбце
+        subj = page.cell(row=1, column=i).value
+        subj = subj.strip().strip('[').strip(']')  # убираем лишние пробелы и квадратные скобки
+        subjects[subj] = i
+    subjects.pop('Химия')
+    subjects.pop('Немецкий язык')
+    subjects.pop('География')
+    return subjects
+
+
+def create_list2(main_list, list1):
+    list2 = [i for i in main_list]
     for i in list1:
         list2.remove(i)
     return list2
@@ -63,7 +110,7 @@ def find_score(subjects, page, end):
     for i in range(1, end):
         score = 0
         for j in subjects:
-            cell = page.cell(row=i, column=columns[j]).value
+            cell = page.cell(row=i, column=subjects_and_columns[j]).value
             if type(cell) is int:
                 score += cell
         if score > 1:
@@ -72,4 +119,5 @@ def find_score(subjects, page, end):
 
 
 if __name__ == '__main__':
+    subjects_and_columns = None
     main()

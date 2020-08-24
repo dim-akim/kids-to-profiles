@@ -10,55 +10,55 @@ def main():
     page = file.active
 
     # end_row = page.max_row + 1
-    end_row = 27
+    end_row = 60
     end_column = page.max_column + 1
 
     subjects_and_columns = get_subjects(page, end_column)
     outcome = []
     scores = []
 
-    intersections_limit = 6
+    intersections_limit = 22
 
     # Делим на 2 группы
+
+    for L in range(1, len(subjects_and_columns.keys())):
+        for subset in itertools.combinations(subjects_and_columns.keys(), L):
+            list1 = list(subset)
+            list2 = create_list2(subjects_and_columns.keys(), list1)
+            score = find_score(list1, page, end_row) + find_score(list2, page, end_row)
+            scores.append(score)
+            if score < intersections_limit:
+                list1.sort()
+                list2.sort()
+                for entry in outcome:
+                    if list2 == entry[0]:
+                        break
+                else:
+                    outcome.append([list1, list2, score])
+
+    # Делим на 3 группы
 
     # for L in range(0, len(subjects_and_columns.keys())):
     #     for subset in itertools.combinations(subjects_and_columns.keys(), L):
     #         list1 = list(subset)
-    #         list2 = create_list2(list1)
-    #         score = find_score(list1, page, end_row) + find_score(list2, page, end_row)
-    #         scores.append(score)
-    #         if score < intersections_limit:
-    #             list1.sort()
-    #             list2.sort()
-    #             for entry in outcome:
-    #                 if list2 == entry[0]:
-    #                     break
-    #             else:
-    #                 outcome.append([list1, list2, score])
-
-    # Делим на 3 группы
-
-    for L in range(0, len(subjects_and_columns.keys())):
-        for subset in itertools.combinations(subjects_and_columns.keys(), L):
-            list1 = list(subset)
-            list2 = create_list2(subjects_and_columns.keys(), list1)
-            for N in range(0, len(list2)):
-                for subset2 in itertools.combinations(list2, N):
-                    list3 = list(subset2)
-                    list4 = create_list2(list2, list3)
-                    score = (find_score(list1, page, end_row) +
-                             find_score(list3, page, end_row) +
-                             find_score(list4, page, end_row))
-                    scores.append(score)
-                    if score < intersections_limit:
-                        list1.sort()
-                        list3.sort()
-                        list4.sort()
-                        for entry in outcome:
-                            if list3 in entry and list4 in entry:
-                                break
-                        else:
-                            outcome.append([list1, list3, list4, score])
+    #         list2 = create_list2(subjects_and_columns.keys(), list1)
+    #         for N in range(0, len(list2)):
+    #             for subset2 in itertools.combinations(list2, N):
+    #                 list3 = list(subset2)
+    #                 list4 = create_list2(list2, list3)
+    #                 score = (find_score(list1, page, end_row) +
+    #                          find_score(list3, page, end_row) +
+    #                          find_score(list4, page, end_row))
+    #                 scores.append(score)
+    #                 if score < intersections_limit:
+    #                     list1.sort()
+    #                     list3.sort()
+    #                     list4.sort()
+    #                     for entry in outcome:
+    #                         if list3 in entry and list4 in entry:
+    #                             break
+    #                     else:
+    #                         outcome.append([list1, list3, list4, score])
 
     outcome.sort()
     for entry in outcome:
@@ -90,11 +90,13 @@ def get_subjects(page, end):
     subjects = {}
     for i in range(3, end):  # первый предмет находится в 3 столбце
         subj = page.cell(row=1, column=i).value
-        subj = subj.strip().strip('[').strip(']')  # убираем лишние пробелы и квадратные скобки
+        subj = subj.strip()  # убираем лишние пробелы и квадратные скобки
         subjects[subj] = i
-    subjects.pop('Химия')
-    subjects.pop('Немецкий язык')
-    subjects.pop('География')
+    # subjects.pop('Химия')
+    subjects.pop('Немецкий')
+    subjects.pop('История')
+    subjects.pop('Математика углубленная')
+    # subjects.pop('География')
     return subjects
 
 
